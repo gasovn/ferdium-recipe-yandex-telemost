@@ -1,0 +1,10 @@
+{
+  "id": "yandex-telemost",
+  "name": "Yandex Telemost",
+  "version": "1.0.0",
+  "license": "MIT",
+  "config": {
+    "serviceURL": "https://telemost.360.yandex.ru",
+    "hasCustomUrl": true
+  }
+}

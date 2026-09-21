@@ -1,0 +1,68 @@
+const path = require('path');
+
+// Conference links point at the public host even when the service runs on the
+// Yandex 360 one, so both count as this service rather than somewhere external.
+const TELEMOST_HOSTS = new Set([
+  'telemost.360.yandex.ru',
+  'telemost.yandex.ru',
+]);
+
+module.exports = Ferdium => {
+  Ferdium.injectJSUnsafe(path.join(__dirname, 'webview-unsafe.js'));
+
+  const getMessages = () => {
+    // Title: "… — N новых сообщений" (RU) / "N new messages" (EN).
+    const match = document.title.match(/(\d+)\s+(?:нов|new)/i);
+    Ferdium.setBadge(match ? Ferdium.safeParseInt(match[1]) : 0);
+  };
+
+  Ferdium.loop(getMessages);
+
+  Ferdium.onNotify(notification => {
+    if (typeof notification.title !== 'string') {
+      notification.title = 'Yandex Telemost';
+    }
+    if (typeof notification.options.body !== 'string') {
+      notification.options.body = '';
+    }
+    return notification;
+  });
+
+  Ferdium.handleDarkMode(() => {});
+
+  document.addEventListener(
+    'click',
+    event => {
+      const link = event.target.closest('a[href^="http"]');
+      if (!link || Ferdium.isImage(link)) {
+        return;
+      }
+      const url = link.getAttribute('href');
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch {
+        return;
+      }
+      // Attachment links (target="download") sit on a separate Yandex file
+      // host. Sending them out hands the download to a browser without the
+      // session. Navigate in place instead: the attach=true response is served
+      // as an attachment, so Ferdium saves it and the page stays.
+      if (link.target === 'download') {
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.assign(url);
+        return;
+      }
+      if (TELEMOST_HOSTS.has(parsed.host)) {
+        return;
+      }
+      if (parsed.host !== window.location.host) {
+        event.preventDefault();
+        event.stopPropagation();
+        Ferdium.openNewWindow(url);
+      }
+    },
+    true,
+  );
+};
