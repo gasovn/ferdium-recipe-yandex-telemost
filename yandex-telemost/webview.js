@@ -1,12 +1,5 @@
 const path = require('path');
 
-// Conference links point at the public host even when the service runs on the
-// Yandex 360 one, so both count as this service rather than somewhere external.
-const TELEMOST_HOSTS = new Set([
-  'telemost.360.yandex.ru',
-  'telemost.yandex.ru',
-]);
-
 module.exports = Ferdium => {
   Ferdium.injectJSUnsafe(path.join(__dirname, 'webview-unsafe.js'));
 
@@ -52,9 +45,6 @@ module.exports = Ferdium => {
         event.preventDefault();
         event.stopPropagation();
         window.location.assign(url);
-        return;
-      }
-      if (TELEMOST_HOSTS.has(parsed.host)) {
         return;
       }
       if (parsed.host !== window.location.host) {
