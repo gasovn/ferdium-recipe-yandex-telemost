@@ -4,8 +4,8 @@ module.exports = Ferdium => {
   Ferdium.injectJSUnsafe(path.join(__dirname, 'webview-unsafe.js'));
 
   const getMessages = () => {
-    // Title: "… — N новых сообщений" (RU) / "N new messages" (EN).
-    const match = document.title.match(/(\d+)\s+(?:нов|new)/i);
+    // Title: "N · Яндекс Телемост". During a call it carries no count.
+    const match = document.title.match(/^(\d+)\s/);
     Ferdium.setBadge(match ? Ferdium.safeParseInt(match[1]) : 0);
   };
 
